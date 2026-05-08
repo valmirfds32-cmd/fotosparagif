@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criador de GIF Profissional</title>
-    <script src="./gif.js"></script>
+    <!-- Importação da biblioteca principal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -36,6 +37,16 @@
             color: #666;
             font-size: 14px;
             margin-bottom: 30px;
+        }
+        .aviso {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
         }
         .area-upload {
             border: 3px dashed #1e3c72;
@@ -69,9 +80,6 @@
             font-weight: bold;
             margin-top: 10px;
             transition: background 0.3s;
-        }
-        .btn-selecionar:hover {
-            background: #2a5298;
         }
         .preview-fotos {
             display: flex;
@@ -127,13 +135,35 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
-        .btn-criar:hover {
-            transform: scale(1.02);
-        }
         .btn-criar:disabled {
             background: #ccc;
             cursor: not-allowed;
-            transform: none;
+        }
+        .progresso-container {
+            width: 100%;
+            height: 25px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px auto;
+            display: none;
+        }
+        .barra-progresso {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.1s linear;
+        }
+        .texto-progresso {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #1e3c72;
+            display: none;
         }
         .area-resultado {
             text-align: center;
@@ -155,12 +185,6 @@
             border-radius: 8px;
             font-weight: bold;
         }
-        .loading {
-            text-align: center;
-            margin-top: 20px;
-            color: #1e3c72;
-            display: none;
-        }
         .espaco-anuncio {
             width: 100%;
             height: 90px;
@@ -177,149 +201,169 @@
 </head>
 <body>
     <div class="container">
-        <h1>🖼️ Criador de GIF</h1>
-        <p class="subtitulo">Transforme suas fotos JPG em uma animação incrível!</p>
 
-        <!-- ESPAÇO PARA ANÚNCIO -->
+        <!-- ESPAÇO PARA PUBLICIDADE - TOPO -->
         <div class="espaco-anuncio">
-            Espaço Publicitário
+            Espaço para Anúncio - Topo
         </div>
 
-        <!-- ÁREA PARA SELECIONAR FOTOS -->
-        <div class="area-upload" id="areaDrop">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-            </svg>
-            <p>Clique ou arraste suas fotos JPEG aqui</p>
-            <label for="arquivos" class="btn-selecionar">📂 ABRIR FOTOS</label>
+        <h1>🖼️ Criador de GIF</h1>
+        <p class="subtitulo">Transforme suas fotos em uma animação incrível!</p>
+
+        <div class="aviso">
+            ⚠️ Dica: Use fotos de tamanho similar para um melhor resultado.
+        </div>
+
+        <div class="area-upload" id="areaDrop" onclick="document.getElementById('arquivos').click()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9-2 2-2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <p>Arraste fotos ou clique no botão abaixo</p>
+            <label for="arquivos" class="btn-selecionar" onclick="event.stopPropagation()">Selecionar Fotos</label>
             <input type="file" id="arquivos" accept="image/*" multiple>
         </div>
 
-        <!-- PRÉVIA DAS FOTOS -->
         <div class="preview-fotos" id="preview"></div>
-
-        <!-- CONFIGURAÇÕES -->
+        <div class="linha-config">
+    <label>🖼️ Ajustar fotos (esticar):</label>
+    <input type="checkbox" id="ajustarFotos" checked>
+</div>
         <div class="configuracao">
             <div class="linha-config">
-                <label>⏱️ Velocidade da Animação:</label>
+                <label>⏱️ Intervalo entre fotos:</label>
                 <div class="valor-velocidade" id="mostrarVelocidade">0.5s</div>
             </div>
-            <input type="range" id="velocidade" min="100" max="1500" value="500">
-            <p style="text-align: center; font-size: 12px; color: #777; margin-top: 10px;">Mais para a esquerda = Mais rápido | Mais para a direita = Mais devagar</p>
+            <input type="range" id="velocidade" min="100" max="2000" value="500">
         </div>
 
-        <button class="btn-criar" id="btnCriar" disabled>
-            🎬 Criar Meu GIF Agora
-        </button>
+        <button class="btn-criar" id="btnCriar" disabled>🎬 Criar Meu GIF Agora</button>
 
-        <div class="loading" id="loading">
-            <p>⏳ Processando... Criando sua animação...</p>
+        <div class="texto-progresso" id="textoProgresso">Iniciando...</div>
+        <div class="progresso-container" id="containerProgresso">
+            <div class="barra-progresso" id="barraProgresso">0%</div>
         </div>
 
-        <!-- RESULTADO -->
         <div class="area-resultado" id="resultado">
             <h3>✅ Seu GIF está pronto!</h3>
             <img id="gifFinal" src="" alt="GIF">
             <a href="#" id="btnBaixar" class="btn-baixar" download="meu-gif.gif">📥 BAIXAR GIF</a>
         </div>
 
-        <!-- ESPAÇO PARA ANÚNCIO -->
+        <!-- ESPAÇO PARA PUBLICIDADE - RODAPÉ -->
         <div class="espaco-anuncio">
-            Espaço Publicitário
+            Espaço para Anúncio - Rodapé
         </div>
 
     </div>
 
     <script>
-        let imagensSelecionadas = [];
-        const inputArquivos = document.getElementById('arquivos');
-        const previewDiv = document.getElementById('preview');
+        let imagensProntas = [];
+        const input = document.getElementById('arquivos');
+        const preview = document.getElementById('preview');
         const btnCriar = document.getElementById('btnCriar');
-        const velocidadeRange = document.getElementById('velocidade');
-        const mostrarVelocidade = document.getElementById('mostrarVelocidade');
-        const loading = document.getElementById('loading');
-        const resultadoDiv = document.getElementById('resultado');
-        const gifFinalImg = document.getElementById('gifFinal');
-        const btnBaixar = document.getElementById('btnBaixar');
+        const rangeVelocidade = document.getElementById('velocidade');
+        const txtVelocidade = document.getElementById('mostrarVelocidade');
+        
+        const bProgresso = document.getElementById('barraProgresso');
+        const tProgresso = document.getElementById('textoProgresso');
+        const cProgresso = document.getElementById('containerProgresso');
+        const resDiv = document.getElementById('resultado');
 
-        // Configura o caminho do worker para a biblioteca gif.js
-        if(typeof GIF !== 'undefined') {
-            GIF.defaults.workerScript = './gif.worker.js';
-        }
+        // Atualiza o texto da velocidade no slider
+        rangeVelocidade.oninput = function() {
+            txtVelocidade.innerText = (this.value / 1000).toFixed(1) + 's';
+        };
 
-        // Atualiza o texto da velocidade
-        velocidadeRange.addEventListener('input', function() {
-            const valor = this.value / 1000;
-            mostrarVelocidade.textContent = valor.toFixed(1) + 's';
-        });
+        // Carregar as imagens e gerar preview
+        input.onchange = function(e) {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
 
-        // Quando seleciona as fotos
-        inputArquivos.addEventListener('change', function(e) {
-            const arquivos = Array.from(e.target.files);
-            
-            if(arquivos.length === 0) return;
-            
-            imagensSelecionadas = [];
-            previewDiv.innerHTML = "";
-
-            arquivos.forEach(arquivo => {
-                if(arquivo.type.includes('image')) {
-                    const leitor = new FileReader();
-                    leitor.onload = function(event) {
-                        const img = new Image();
-                        img.src = event.target.result;
-                        imagensSelecionadas.push(img);
-
-                        // Mostra miniatura
-                        const miniImg = document.createElement('img');
-                        miniImg.src = event.target.result;
-                        miniImg.className = "foto-mini";
-                        previewDiv.appendChild(miniImg);
-                    }
-                    leitor.readAsDataURL(arquivo);
-                }
-            });
-
-            btnCriar.disabled = false;
-        });
-
-        // Função principal de criar GIF
-        btnCriar.addEventListener('click', function() {
-            if(imagensSelecionadas.length < 2) {
-                alert("Selecione pelo menos 2 fotos!");
-                return;
-            }
-
-            loading.style.display = "block";
+            imagensProntas = [];
+            preview.innerHTML = '';
             btnCriar.disabled = true;
-            resultadoDiv.style.display = "none";
 
-            const gif = new GIF({
-                workers: 2,
-                quality: 10,
-                width: 400,
-                height: 400,
-                workerScript: './gif.worker.js'
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        imagensProntas.push(img);
+                        const mini = document.createElement('img');
+                        mini.src = img.src;
+                        mini.className = 'foto-mini';
+                        preview.appendChild(mini);
+                        
+                        if (imagensProntas.length >= 2) btnCriar.disabled = false;
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
             });
+        };
 
-            // Adiciona as imagens
-            imagensSelecionadas.forEach(img => {
-                gif.addFrame(img, {delay: velocidadeRange.value});
-            });
+        // Lógica Principal de Criação
 
-            gif.on('finished', function(blob) {
-                const url = URL.createObjectURL(blob);
-                
-                gifFinalImg.src = url;
-                btnBaixar.href = url;
-                
-                loading.style.display = "none";
-                resultadoDiv.style.display = "block";
-                btnCriar.disabled = false;
-            });
 
-            gif.render();
-        });
+btnCriar.onclick = function() {
+    resDiv.style.display = 'none';
+    cProgresso.style.display = 'block';
+    tProgresso.style.display = 'block';
+    btnCriar.disabled = true;
+
+    const ajustar = document.getElementById('ajustarFotos').checked;
+    
+    // Definimos o tamanho padrão baseado na primeira imagem se o ajuste estiver ligado
+    const larguraPadrao = imagensProntas[0].width;
+    const alturaPadrao = imagensProntas[0].height;
+
+    const workerBlob = new Blob([
+        'importScripts("https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js");'
+    ], { type: 'application/javascript' });
+
+    const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: ajustar ? larguraPadrao : null,
+        height: ajustar ? alturaPadrao : null,
+        workerScript: URL.createObjectURL(workerBlob)
+    });
+
+    const delayValue = parseInt(rangeVelocidade.value);
+
+    imagensProntas.forEach(img => {
+        if (ajustar) {
+            // Cria um canvas temporário para redimensionar/esticar a imagem
+            const canvas = document.createElement('canvas');
+            canvas.width = larguraPadrao;
+            canvas.height = alturaPadrao;
+            const ctx = canvas.getContext('2d');
+            // O drawImage com 5 argumentos faz o "stretch" (esticar) para o tamanho do canvas
+            ctx.drawImage(img, 0, 0, larguraPadrao, alturaPadrao);
+            gif.addFrame(canvas, {delay: delayValue, copy: true});
+        } else {
+            gif.addFrame(img, {delay: delayValue, copy: true});
+        }
+    });
+
+    gif.on('progress', function(p) {
+        const pct = Math.round(p * 100);
+        bProgresso.style.width = pct + '%';
+        bProgresso.innerText = pct + '%';
+        tProgresso.innerText = "Renderizando animação: " + pct + "%";
+    });
+
+    gif.on('finished', function(blob) {
+        const url = URL.createObjectURL(blob);
+        document.getElementById('gifFinal').src = url;
+        document.getElementById('btnBaixar').href = url;
+        
+        cProgresso.style.display = 'none';
+        tProgresso.style.display = 'none';
+        resDiv.style.display = 'block';
+        btnCriar.disabled = false;
+    });
+
+    gif.render();
+};          
     </script>
 </body>
 </html>
