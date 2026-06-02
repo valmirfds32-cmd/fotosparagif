@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criador de GIF Profissional - Modo Camadas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            margin-bottom: 10px;
+            font-size: 26px;
+        }
+        .subtitulo {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        .aviso {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .area-upload {
+            border: 3px dashed #1e3c72;
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 25px;
+        }
+        .area-upload:hover {
+            background-color: #f8f9ff;
+            border-color: #2a5298;
+        }
+        .area-upload svg {
+            width: 50px;
+            height: 50px;
+            fill: #1e3c72;
+            margin-bottom: 15px;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .btn-selecionar {
+            background: #1e3c72;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            display: inline-block;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        /* PAINEL DE CAMADAS */
+        .painel-camadas {
+            background: #f1f3f9;
+            border: 2px solid #dcdfe6;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+        .painel-camadas h3 {
+            color: #1e3c72;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .preview-fotos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: flex-start;
+            min-height: 90px;
+            align-items: center;
+        }
+        .camada-item {
+            position: relative;
+            background: white;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .foto-mini {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .controles-camada {
+            display: flex;
+            gap: 4px;
+            width: 100%;
+            justify-content: space-between;
+        }
+        .btn-camada {
+            background: #e2e8f0;
+            border: none;
+            color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-camada:hover {
+            background: #cbd5e1;
+        }
+        .btn-remover {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .btn-remover:hover {
+            background: #fca5a5;
+        }
+
+        /* CONFIGURAÇÕES E TAMANHO */
+        .configuracao {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+        .linha-config {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .linha-config label {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        /* Novos campos de Tamanho */
+        .grupo-tamanho {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .campo-num {
+            width: 80px;
+            padding: 6px 10px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #1e3c72;
+            text-align: center;
+        }
+        .campo-num:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+        .btn-capturar {
+            background: #e2e8f0;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #475569;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-capturar:hover {
+            background: #cbd5e1;
+            color: #1e3c72;
+        }
+
+        input[type="range"] {
+            width: 60%;
+        }
+        .valor-velocidade {
+            background: #1e3c72;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            min-width: 80px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .btn-criar {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-criar:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .progresso-container {
+            width: 100%;
+            height: 25px;
+            background-color: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px auto;
+            display: none;
+        }
+        .barra-progresso {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #1e3c72, #2a5298);
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            font-weight: bold;
+            transition: width 0.1s linear;
+        }
+        .texto-progresso {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #1e3c72;
+            display: none;
+        }
+        .area-resultado {
+            text-align: center;
+            margin-top: 25px;
+            display: none;
+        }
+        #gifFinal {
+            max-width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-baixar {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 30px;
+            background: #ffc107;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+        .espaco-anuncio {
+            width: 100%;
+            height: 90px;
+            background-color: #e9ecef;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="espaco-anuncio">
+            Espaço para Anúncio - Topo
+        </div>
+
+        <h1>🖼️ Criador de GIF</h1>
+        <p class="subtitulo">Transforme suas fotos em uma animação incrível!</p>
+
+        <div class="aviso">
+            ⚠️ Dica: Adicione fotos individualmente e defina abaixo o tamanho exato que deseja para o seu GIF.
+        </div>
+
+        <div class="area-upload" id="areaDrop" onclick="document.getElementById('arquivos').click()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9-2 2-2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            <p>Clique para adicionar uma nova foto (Camada)</p>
+            <label for="arquivos" class="btn-selecionar" onclick="event.stopPropagation()">Adicionar Foto</label>
+            <input type="file" id="arquivos" accept="image/*">
+        </div>
+
+        <div class="painel-camadas">
+            <h3>🥞 Painel de Camadas (<span id="totalCamadas">0</span>)</h3>
+            <div class="preview-fotos" id="preview"></div>
+        </div>
+
+        <div class="configuracao">
+            <div class="linha-config">
+                <label>📐 Dimensões do GIF (px):</label>
+                <div class="grupo-tamanho">
+                    <input type="number" id="gifWidth" class="campo-num" value="500" min="10" placeholder="Width" title="Largura (Width)">
+                    <span>x</span>
+                    <input type="number" id="gifHeight" class="campo-num" value="500" min="10" placeholder="Height" title="Altura (Height)">
+                    <button type="button" class="btn-capturar" id="btnCapturarTam" title="Preencher com o tamanho real da primeira imagem da lista">Capturar da 1ª Foto</button>
+                </div>
+            </div>
+
+            <div class="linha-config">
+                <label>⏱️ Intervalo entre fotos:</label>
+                <div class="valor-velocidade" id="mostrarVelocidade">0.5s</div>
+            </div>
+            <input type="range" id="velocidade" min="100" max="2000" value="500">
+        </div>
+
+        <button class="btn-criar" id="btnCriar" disabled>🎬 Criar Meu GIF Agora</button>
+
+        <div class="texto-progresso" id="textoProgresso">Iniciando...</div>
+        <div class="progresso-container" id="containerProgresso">
+            <div class="barra-progresso" id="barraProgresso">0%</div>
+        </div>
+
+        <div class="area-resultado" id="resultado">
+            <h3>✅ Seu GIF está pronto!</h3>
+            <img id="gifFinal" src="" alt="GIF">
+            <a href="#" id="btnBaixar" class="btn-baixar" download="meu-gif.gif">📥 BAIXAR GIF</a>
+        </div>
+
+        <div class="espaco-anuncio">
+            Espaço para Anúncio - Rodapé
+        </div>
+
+    </div>
+
+    <script>
+        let imagensProntas = []; 
+        
+        const input = document.getElementById('arquivos');
+        const preview = document.getElementById('preview');
+        const btnCriar = document.getElementById('btnCriar');
+        const rangeVelocidade = document.getElementById('velocidade');
+        const txtVelocidade = document.getElementById('mostrarVelocidade');
+        const totalCamadasTxt = document.getElementById('totalCamadas');
+        
+        const inputWidth = document.getElementById('gifWidth');
+        const inputHeight = document.getElementById('gifHeight');
+        const btnCapturarTam = document.getElementById('btnCapturarTam');
+        
+        const bProgresso = document.getElementById('barraProgresso');
+        const tProgresso = document.getElementById('textoProgresso');
+        const cProgresso = document.getElementById('containerProgresso');
+        const resDiv = document.getElementById('resultado');
+
+        // Atualiza o texto da velocidade no slider
+        rangeVelocidade.oninput = function() {
+            txtVelocidade.innerText = (this.value / 1000).toFixed(1) + 's';
+        };
+
+        // Função para preencher automaticamente com o tamanho real da primeira foto
+        btnCapturarTam.onclick = function() {
+            if (imagensProntas.length > 0) {
+                inputWidth.value = imagensProntas[0].width;
+                inputHeight.value = imagensProntas[0].height;
+            } else {
+                alert("Adicione pelo menos uma foto primeiro para capturar o tamanho!");
+            }
+        };
+
+        // Função para atualizar a interface do painel de camadas
+        function atualizarPainelCamadas() {
+            preview.innerHTML = '';
+            totalCamadasTxt.innerText = imagensProntas.length;
+
+            imagensProntas.forEach((img, index) => {
+                const item = document.createElement('div');
+                item.className = 'camada-item';
+
+                const mini = document.createElement('img');
+                mini.src = img.src;
+                mini.className = 'foto-mini';
+                item.appendChild(mini);
+
+                const controles = document.createElement('div');
+                controles.className = 'controles-camada';
+
+                const btnEsquerda = document.createElement('button');
+                btnEsquerda.className = 'btn-camada';
+                btnEsquerda.innerText = '◀';
+                btnEsquerda.disabled = index === 0;
+                btnEsquerda.onclick = () => moverCamada(index, -1);
+                
+                const btnRemover = document.createElement('button');
+                btnRemover.className = 'btn-camada btn-remover';
+                btnRemover.innerText = '✕';
+                btnRemover.onclick = () => removerCamada(index);
+
+                const btnDireita = document.createElement('button');
+                btnDireita.className = 'btn-camada';
+                btnDireita.innerText = '▶';
+                btnDireita.disabled = index === imagensProntas.length - 1;
+                btnDireita.onclick = () => moverCamada(index, 1);
+
+                controles.appendChild(btnEsquerda);
+                controles.appendChild(btnRemover);
+                controles.appendChild(btnDireita);
+                item.appendChild(controles);
+
+                preview.appendChild(item);
+            });
+
+            btnCriar.disabled = imagensProntas.length < 2;
+        }
+
+        function moverCamada(index, direcao) {
+            const novaPosicao = index + direcao;
+            if (novaPosicao < 0 || novaPosicao >= imagensProntas.length) return;
+            
+            const temp = imagensProntas[index];
+            imagensProntas[index] = imagensProntas[novaPosicao];
+            imagensProntas[novaPosicao] = temp;
+            
+            atualizarPainelCamadas();
+        }
+
+        function removerCamada(index) {
+            imagensProntas.splice(index, 1);
+            atualizarPainelCamadas();
+        }
+
+        // Carrega um arquivo de cada vez de forma incremental
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    imagensProntas.push(img);
+                    
+                    // Se for a PRIMEIRA foto adicionada, preenche por padrão os campos de tamanho com o tamanho dela
+                    if (imagensProntas.length === 1) {
+                        inputWidth.value = img.width;
+                        inputHeight.value = img.height;
+                    }
+                    
+                    atualizarPainelCamadas();
+                    input.value = '';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+        // Lógica Principal de Criação de GIF com tamanho customizado
+        btnCriar.onclick = function() {
+            // Validação dos novos campos editáveis
+            let larguraAlvo = parseInt(inputWidth.value) || 500;
+            let alturaAlvo = parseInt(inputHeight.value) || 500;
+
+            if (larguraAlvo < 10 || alturaAlvo < 10) {
+                alert("Por favor, insira um tamanho válido (mínimo 10px).");
+                return;
+            }
+
+            resDiv.style.display = 'none';
+            cProgresso.style.display = 'block';
+            tProgresso.style.display = 'block';
+            btnCriar.disabled = true;
+
+            const workerBlob = new Blob([
+                'importScripts("https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js");'
+            ], { type: 'application/javascript' });
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: larguraAlvo,
+                height: alturaAlvo,
+                workerScript: URL.createObjectURL(workerBlob)
+            });
+
+            const delayValue = parseInt(rangeVelocidade.value);
+
+            imagensProntas.forEach(img => {
+                // Força todas as imagens a se adaptarem ao tamanho Width x Height definido pelo usuário
+                const canvas = document.createElement('canvas');
+                canvas.width = larguraAlvo;
+                canvas.height = alturaAlvo;
+                const ctx = canvas.getContext('2d');
+                
+                // Desenha aplicando o esticamento/redimensionamento para a resolução escolhida
+                ctx.drawImage(img, 0, 0, larguraAlvo, alturaAlvo);
+                gif.addFrame(canvas, {delay: delayValue, copy: true});
+            });
+
+            gif.on('progress', function(p) {
+                const pct = Math.round(p * 100);
+                bProgresso.style.width = pct + '%';
+                bProgresso.innerText = pct + '%';
+                tProgresso.innerText = "Renderizando animação: " + pct + "%";
+            });
+
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                document.getElementById('gifFinal').src = url;
+                document.getElementById('btnBaixar').href = url;
+                
+                cProgresso.style.display = 'none';
+                tProgresso.style.display = 'none';
+                resDiv.style.display = 'block';
+                btnCriar.disabled = false;
+            });
+
+            gif.render();
+        };          
+    </script>
+</body>
+</html>
